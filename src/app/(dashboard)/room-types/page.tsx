@@ -9,7 +9,7 @@ import { Plus, BedDouble, Users, Maximize, X } from "lucide-react";
 export default function RoomTypesPage() {
   const [types, setTypes] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", description: "", pricePerNight: 0, pricePerHour: 0, maxGuests: 2, bedCount: 1, area: 0 });
+  const [form, setForm] = useState({ name: "", description: "", pricePerNight: 0, pricePerHour: 0, overnightPrice: 0, maxGuests: 2, bedCount: 1, area: 0 });
 
   useEffect(() => { fetch("/api/room-types").then(r => r.json()).then(setTypes); }, []);
 
@@ -19,7 +19,7 @@ export default function RoomTypesPage() {
     const data = await fetch("/api/room-types").then(r => r.json());
     setTypes(data);
     setShowForm(false);
-    setForm({ name: "", description: "", pricePerNight: 0, pricePerHour: 0, maxGuests: 2, bedCount: 1, area: 0 });
+    setForm({ name: "", description: "", pricePerNight: 0, pricePerHour: 0, overnightPrice: 0, maxGuests: 2, bedCount: 1, area: 0 });
   };
 
   return (
@@ -41,6 +41,7 @@ export default function RoomTypesPage() {
               <Input label="Mô tả" placeholder="Mô tả ngắn..." value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
               <Input label="Giá / đêm (VNĐ)" type="number" placeholder="500000" value={form.pricePerNight || ""} onChange={e => setForm({...form, pricePerNight: +e.target.value})} required />
               <Input label="Giá / giờ (VNĐ)" type="number" placeholder="100000" value={form.pricePerHour || ""} onChange={e => setForm({...form, pricePerHour: +e.target.value})} required />
+              <Input label="Giá qua đêm (VNĐ)" type="number" placeholder="240000" value={form.overnightPrice || ""} onChange={e => setForm({...form, overnightPrice: +e.target.value})} required />
               <Input label="Số khách tối đa" type="number" value={form.maxGuests || ""} onChange={e => setForm({...form, maxGuests: +e.target.value})} required />
               <Input label="Số giường" type="number" value={form.bedCount || ""} onChange={e => setForm({...form, bedCount: +e.target.value})} required />
               <Input label="Diện tích (m²)" type="number" value={form.area || ""} onChange={e => setForm({...form, area: +e.target.value})} />
@@ -66,7 +67,7 @@ export default function RoomTypesPage() {
                 <div className="bg-gray-50 rounded-lg p-2">
                   <p className="text-lg font-bold text-blue-600">{(t.pricePerNight/1000).toFixed(0)}K</p>
                   <p className="text-[10px] text-gray-500">VNĐ/đêm</p>
-                  <p className="text-sm font-bold text-emerald-600 mt-1">{(t.pricePerHour/1000).toFixed(0)}K/giờ</p>
+                  <p className="text-sm font-bold text-emerald-600 mt-1">{(t.pricePerHour/1000).toFixed(0)}K/giờ · {(t.overnightPrice/1000).toFixed(0)}K/đêm</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-2">
                   <div className="flex items-center justify-center gap-1">

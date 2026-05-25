@@ -78,7 +78,7 @@ export default function BookingsPage() {
         <div className={`mb-4 px-4 py-3 rounded-lg text-sm ${message.includes("thành công") ? "bg-emerald-50 border border-emerald-200 text-emerald-700" : "bg-red-50 border border-red-200 text-red-700"}`}>{message}</div>
       )}
 
-      {showWalkin && isStaff && <WalkinBookingForm roomTypes={roomTypes} rooms={rooms} onClose={() => setShowWalkin(false)} onSuccess={load} />}
+      {showWalkin && isStaff && <WalkinBookingForm rooms={rooms} onClose={() => setShowWalkin(false)} onSuccess={load} />}
 
       {showForm && (
         <Card className="mb-6 border-blue-100 bg-blue-50/30"><CardContent className="p-5">

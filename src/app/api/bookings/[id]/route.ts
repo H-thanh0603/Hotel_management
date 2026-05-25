@@ -25,13 +25,36 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json(updated);
     }
     case "check-out": {
-      if (booking.status !== "CHECKED_IN") return NextResponse.json({ error: "Chi check-out booking dang CheckedIn" }, { status: 400 });
-      const updated = await prisma.booking.update({ where: { id }, data: { status: "CHECKED_OUT", actualCheckOut: new Date() } });
+      if (booking.status !== "CHECKED_IN") return NextResponse.json({ error: "Chỉ check-out booking đang CheckedIn" }, { status: 400 });
+      const now = new Date();
+      const expectedCheckOut = new Date(booking.checkOutDate);
+      
+      // Calculate overtime
+      let overtimeMinutes = 0;
+      let overtimeCharge = 0;
+      if (now > expectedCheckOut) {
+        overtimeMinutes = Math.ceil((now.getTime() - expectedCheckOut.getTime()) / (1000 * 60));
+        const config = await prisma.pricingConfig.findUnique({ where: { name: "default" } });
+        const gracePeriod = config?.gracePeriod || 15;
+        const chargeAfter = config?.overtimeCharge || 30;
+        if (overtimeMinutes > gracePeriod) {
+          const roomType = await prisma.roomType.findUnique({ where: { id: booking.roomTypeId } });
+          const pricePerHour = roomType?.pricePerHour || 0;
+          const chargeableMinutes = overtimeMinutes - gracePeriod;
+          const chargeableHours = Math.ceil(chargeableMinutes / 60);
+          overtimeCharge = chargeableHours * pricePerHour;
+        }
+      }
+
+      const updated = await prisma.booking.update({
+        where: { id },
+        data: { status: "CHECKED_OUT", actualCheckOut: now, note: overtimeCharge > 0 ? `${booking.note || ""} | Phụ thu quá giờ: ${overtimeCharge.toLocaleString()}đ (${overtimeMinutes} phút)`.trim() : booking.note },
+      });
       if (booking.roomId) {
         await prisma.room.update({ where: { id: booking.roomId }, data: { status: "CLEANING" } });
         await prisma.housekeepingTask.create({ data: { roomId: booking.roomId, status: "PENDING" } });
       }
-      return NextResponse.json(updated);
+      return NextResponse.json({ ...updated, overtimeMinutes, overtimeCharge });
     }
     case "cancel": {
       if (["CHECKED_IN", "CHECKED_OUT"].includes(booking.status)) return NextResponse.json({ error: "Khong the huy booking nay" }, { status: 400 });

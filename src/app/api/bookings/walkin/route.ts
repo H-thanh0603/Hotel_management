@@ -15,30 +15,32 @@ export async function POST(req: Request) {
   if (!session) return NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 });
 
   const body = await req.json();
-  const { customerName, customerPhone, customerIdentity, roomId, hours, note } = body;
+  const { roomId, bookingType, hours, note } = body;
 
-  if (!customerName || !roomId || !hours) {
-    return NextResponse.json({ error: "Vui lòng điền đầy đủ thông tin" }, { status: 400 });
-  }
+  if (!roomId) return NextResponse.json({ error: "Vui lòng chọn phòng" }, { status: 400 });
 
-  // Find or create customer
-  let customer = null;
-  if (customerPhone) {
-    customer = await prisma.customer.findFirst({ where: { phone: customerPhone } });
-  }
-  if (!customer) {
-    customer = await prisma.customer.create({
-      data: { fullName: customerName, phone: customerPhone || null, identityNumber: customerIdentity || null },
-    });
-  }
-
-  // Get room and verify available
   const room = await prisma.room.findUnique({ where: { id: roomId }, include: { roomType: true } });
   if (!room) return NextResponse.json({ error: "Phòng không tồn tại" }, { status: 404 });
   if (room.status !== "AVAILABLE") return NextResponse.json({ error: "Phòng không trống" }, { status: 400 });
 
+  // Create anonymous customer for walk-in
+  const customer = await prisma.customer.create({
+    data: { fullName: "Khách vãng lai", note: "Walk-in" },
+  });
+
   const now = new Date();
-  const checkOut = new Date(now.getTime() + hours * 60 * 60 * 1000);
+  let checkOut: Date;
+
+  if (bookingType === "OVERNIGHT") {
+    const config = await prisma.pricingConfig.findUnique({ where: { name: "default" } });
+    const endHour = parseInt((config?.overnightEnd || "11:00").split(":")[0]);
+    const endMin = parseInt((config?.overnightEnd || "11:00").split(":")[1]);
+    checkOut = new Date(now);
+    checkOut.setDate(checkOut.getDate() + 1);
+    checkOut.setHours(endHour, endMin, 0, 0);
+  } else {
+    checkOut = new Date(now.getTime() + (hours || 2) * 60 * 60 * 1000);
+  }
 
   const booking = await prisma.booking.create({
     data: {
@@ -50,8 +52,8 @@ export async function POST(req: Request) {
       checkOutDate: checkOut,
       actualCheckIn: now,
       status: "CHECKED_IN",
-      bookingType: "HOURLY",
-      hours: hours,
+      bookingType: bookingType || "HOURLY",
+      hours: bookingType === "HOURLY" ? (hours || 2) : null,
       numberOfGuests: 1,
       note,
       createdById: (session.user as any).id,
@@ -59,7 +61,6 @@ export async function POST(req: Request) {
     include: { customer: true, room: true, roomType: true },
   });
 
-  // Update room to OCCUPIED
   await prisma.room.update({ where: { id: roomId }, data: { status: "OCCUPIED" } });
 
   return NextResponse.json(booking, { status: 201 });

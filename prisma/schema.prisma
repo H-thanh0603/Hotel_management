@@ -44,6 +44,7 @@ model RoomType {
   description   String?
   pricePerNight Float
   pricePerHour  Float    @default(0)
+  overnightPrice Float   @default(0)
   maxGuests     Int
   bedCount      Int
   area          Float?
@@ -167,4 +168,15 @@ model HousekeepingTask {
 
   room       Room  @relation(fields: [roomId], references: [id])
   assignedTo User? @relation("AssignedTo", fields: [assignedToId], references: [id])
+}
+
+model PricingConfig {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  overnightStart  String   @default("23:00")
+  overnightEnd    String   @default("11:00")
+  gracePeriod     Int      @default(15)
+  overtimeCharge  Int      @default(30)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

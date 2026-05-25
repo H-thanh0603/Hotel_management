@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard, BedDouble, Tag, CalendarCheck, Users,
-  ConciergeBell, Receipt, Sparkles, UserCog, LogOut, Hotel
+  ConciergeBell, Receipt, Sparkles, UserCog, LogOut, Hotel, Settings
 } from "lucide-react";
 
 const adminLinks = [
@@ -17,6 +17,7 @@ const adminLinks = [
   { href: "/invoices", label: "Hoá đơn", icon: Receipt },
   { href: "/housekeeping", label: "Dọn phòng", icon: Sparkles },
   { href: "/users", label: "Nhân viên", icon: UserCog },
+  { href: "/settings", label: "Cài đặt giá", icon: Settings },
 ];
 
 const roleLinks: Record<string, typeof adminLinks> = {
