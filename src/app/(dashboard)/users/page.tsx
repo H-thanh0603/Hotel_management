@@ -6,6 +6,14 @@ import { Select } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Plus, X } from "lucide-react";
+
+const roleLabels: Record<string, string> = {
+  ADMIN: "Quản trị viên",
+  RECEPTIONIST: "Lễ tân",
+  HOUSEKEEPING: "Buồng phòng",
+  CUSTOMER: "Khách hàng",
+};
 
 export default function UsersPage() {
   const [users, setUsers] = useState<any[]>([]);
@@ -21,43 +29,50 @@ export default function UsersPage() {
     load(); setShowForm(false); setForm({ fullName: "", email: "", phone: "", role: "RECEPTIONIST", password: "123456" });
   };
 
-  const roleLabels: Record<string, string> = { ADMIN: "Admin", RECEPTIONIST: "Le tan", HOUSEKEEPING: "Buong phong", CUSTOMER: "Khach" };
-
   return (
-    <div>
+    <div className="animate-fade-in">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Nhan vien</h1>
-        <Button onClick={() => setShowForm(!showForm)}>+ Them nhan vien</Button>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Nhân viên</h1>
+          <p className="text-gray-500 text-sm mt-1">Quản lý tài khoản nhân viên</p>
+        </div>
+        <Button onClick={() => setShowForm(!showForm)}>
+          {showForm ? <><X className="w-4 h-4" /> Đóng</> : <><Plus className="w-4 h-4" /> Thêm nhân viên</>}
+        </Button>
       </div>
       {showForm && (
-        <Card className="mb-6"><CardContent className="p-4">
-          <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
-            <Input placeholder="Ho ten *" value={form.fullName} onChange={e => setForm({...form, fullName: e.target.value})} required />
-            <Input placeholder="Email *" type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
-            <Input placeholder="SDT" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
-            <Select value={form.role} onChange={e => setForm({...form, role: e.target.value})}>
-              <option value="RECEPTIONIST">Le tan</option>
-              <option value="HOUSEKEEPING">Buong phong</option>
-              <option value="ADMIN">Admin</option>
-            </Select>
-            <Input placeholder="Mat khau" value={form.password} onChange={e => setForm({...form, password: e.target.value})} />
-            <Button type="submit">Luu</Button>
-          </form>
-        </CardContent></Card>
+        <Card className="mb-6 border-blue-100 bg-blue-50/30">
+          <CardContent className="p-5">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Input label="Họ tên *" placeholder="Nguyễn Văn A" value={form.fullName} onChange={e => setForm({...form, fullName: e.target.value})} required />
+              <Input label="Email *" type="email" placeholder="email@hotelflow.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
+              <Input label="Số điện thoại" placeholder="0901000000" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} />
+              <Select label="Vai trò" value={form.role} onChange={e => setForm({...form, role: e.target.value})}>
+                <option value="RECEPTIONIST">Lễ tân</option>
+                <option value="HOUSEKEEPING">Buồng phòng</option>
+                <option value="ADMIN">Quản trị viên</option>
+              </Select>
+              <Input label="Mật khẩu" value={form.password} onChange={e => setForm({...form, password: e.target.value})} />
+              <div className="flex items-end">
+                <Button type="submit" variant="success">Lưu nhân viên</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       )}
       <Table>
         <TableHeader><TableRow>
-          <TableHead>Ho ten</TableHead><TableHead>Email</TableHead><TableHead>SDT</TableHead>
-          <TableHead>Vai tro</TableHead><TableHead>Trang thai</TableHead>
+          <TableHead>Họ tên</TableHead><TableHead>Email</TableHead><TableHead>SĐT</TableHead>
+          <TableHead>Vai trò</TableHead><TableHead>Trạng thái</TableHead>
         </TableRow></TableHeader>
         <TableBody>
           {users.map((u: any) => (
             <TableRow key={u.id}>
               <TableCell className="font-medium">{u.fullName}</TableCell>
-              <TableCell>{u.email}</TableCell>
-              <TableCell>{u.phone}</TableCell>
+              <TableCell className="text-gray-500">{u.email}</TableCell>
+              <TableCell>{u.phone || "—"}</TableCell>
               <TableCell><Badge>{roleLabels[u.role] || u.role}</Badge></TableCell>
-              <TableCell><Badge variant={u.status === "ACTIVE" ? "success" : "destructive"}>{u.status}</Badge></TableCell>
+              <TableCell><Badge variant={u.status === "ACTIVE" ? "success" : "destructive"}>{u.status === "ACTIVE" ? "Hoạt động" : "Khoá"}</Badge></TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -1,25 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { BedDouble, Layers } from "lucide-react";
 
-const statusColors: Record<string, string> = {
-  AVAILABLE: "success",
-  RESERVED: "warning",
-  OCCUPIED: "destructive",
-  CLEANING: "secondary",
-  MAINTENANCE: "outline",
-  UNAVAILABLE: "outline",
-};
-
-const statusLabels: Record<string, string> = {
-  AVAILABLE: "Trong",
-  RESERVED: "Da dat",
-  OCCUPIED: "Dang o",
-  CLEANING: "Dang don",
-  MAINTENANCE: "Bao tri",
-  UNAVAILABLE: "Tam ngung",
+const statusConfig: Record<string, { label: string; variant: string; dot: string }> = {
+  AVAILABLE: { label: "Trống", variant: "success", dot: "bg-emerald-500" },
+  RESERVED: { label: "Đã đặt", variant: "warning", dot: "bg-amber-500" },
+  OCCUPIED: { label: "Đang ở", variant: "destructive", dot: "bg-red-500" },
+  CLEANING: { label: "Đang dọn", variant: "info", dot: "bg-cyan-500" },
+  MAINTENANCE: { label: "Bảo trì", variant: "secondary", dot: "bg-gray-500" },
+  UNAVAILABLE: { label: "Tạm ngưng", variant: "outline", dot: "bg-gray-400" },
 };
 
 export default function RoomsPage() {
@@ -32,33 +23,50 @@ export default function RoomsPage() {
 
   const floors = [...new Set(rooms.map(r => r.floor))].sort();
 
-  if (loading) return <p>Dang tai...</p>;
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+    </div>
+  );
 
   return (
-    <div>
+    <div className="animate-fade-in">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Quan li phong</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Sơ đồ phòng</h1>
+          <p className="text-gray-500 text-sm mt-1">Trạng thái phòng theo từng tầng</p>
+        </div>
       </div>
-      <div className="flex gap-2 mb-4 flex-wrap">
-        {Object.entries(statusLabels).map(([key, label]) => (
-          <Badge key={key} variant={statusColors[key] as any}>{label}</Badge>
+      <div className="flex gap-3 mb-6 flex-wrap">
+        {Object.entries(statusConfig).map(([key, cfg]) => (
+          <div key={key} className="flex items-center gap-1.5 text-xs text-gray-600">
+            <div className={`w-2.5 h-2.5 rounded-full ${cfg.dot}`} />
+            <span>{cfg.label}</span>
+          </div>
         ))}
       </div>
       {floors.map(floor => (
-        <div key={floor} className="mb-6">
-          <h2 className="text-lg font-semibold mb-3">Tang {floor}</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {rooms.filter(r => r.floor === floor).map(room => (
-              <Card key={room.id} className="text-center">
-                <CardContent className="p-4">
-                  <p className="font-bold text-lg">{room.roomNumber}</p>
-                  <p className="text-xs text-gray-500">{room.roomType?.name}</p>
-                  <Badge variant={statusColors[room.status] as any} className="mt-2">
-                    {statusLabels[room.status]}
-                  </Badge>
-                </CardContent>
-              </Card>
-            ))}
+        <div key={floor} className="mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <Layers className="w-4 h-4 text-gray-400" />
+            <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Tầng {floor}</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            {rooms.filter(r => r.floor === floor).map(room => {
+              const cfg = statusConfig[room.status] || statusConfig.UNAVAILABLE;
+              return (
+                <Card key={room.id} className="group cursor-pointer hover:scale-[1.02] transition-all duration-200 border-0 shadow-sm">
+                  <CardContent className="p-4 text-center">
+                    <div className="flex items-center justify-center gap-1.5 mb-2">
+                      <div className={`w-2 h-2 rounded-full ${cfg.dot} animate-pulse`} />
+                      <span className="text-lg font-bold text-gray-900">{room.roomNumber}</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mb-2">{room.roomType?.name}</p>
+                    <Badge variant={cfg.variant as any} className="text-[10px]">{cfg.label}</Badge>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       ))}
