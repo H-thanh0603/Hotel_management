@@ -71,6 +71,7 @@ export default function LoginPage() {
               )}
             </Button>
             <div className="pt-3 border-t border-gray-100">
+              <p className="text-center text-sm text-gray-500 mb-3">Chưa có tài khoản? <a href="/register" className="text-blue-600 hover:underline font-medium">Đăng ký</a></p>
               <p className="text-xs text-gray-400 text-center mb-2">Tài khoản demo</p>
               <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
                 <div className="bg-gray-50 rounded-md px-2.5 py-1.5">
