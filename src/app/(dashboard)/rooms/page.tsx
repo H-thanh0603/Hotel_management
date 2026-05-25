@@ -61,7 +61,8 @@ export default function RoomsPage() {
                       <div className={`w-2 h-2 rounded-full ${cfg.dot} animate-pulse`} />
                       <span className="text-lg font-bold text-gray-900">{room.roomNumber}</span>
                     </div>
-                    <p className="text-xs text-gray-500 mb-2">{room.roomType?.name}</p>
+                    <p className="text-xs text-gray-500">{room.roomType?.name}</p>
+                    <p className="text-[10px] text-blue-500 mb-2">{(room.roomType?.pricePerHour || 0).toLocaleString()}đ/giờ</p>
                     <Badge variant={cfg.variant as any} className="text-[10px]">{cfg.label}</Badge>
                   </CardContent>
                 </Card>

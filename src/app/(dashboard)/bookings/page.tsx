@@ -142,7 +142,10 @@ export default function BookingsPage() {
               <TableRow key={b.id}>
                 <TableCell><span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{b.bookingCode}</span></TableCell>
                 {isStaff && <TableCell className="font-medium">{b.customer?.fullName}</TableCell>}
-                <TableCell>{isStaff ? (b.room?.roomNumber || "—") : b.roomType?.name}</TableCell>
+                <TableCell>
+                  {isStaff ? (b.room?.roomNumber || "—") : b.roomType?.name}
+                  {b.bookingType === "HOURLY" && <Badge variant="info" className="ml-1.5 text-[9px]">{b.hours}h</Badge>}
+                </TableCell>
                 <TableCell>{new Date(b.checkInDate).toLocaleDateString("vi-VN")}</TableCell>
                 <TableCell>{new Date(b.checkOutDate).toLocaleDateString("vi-VN")}</TableCell>
                 <TableCell><Badge variant={cfg.variant as any}>{cfg.label}</Badge></TableCell>

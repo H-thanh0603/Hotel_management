@@ -43,6 +43,7 @@ model RoomType {
   name          String   @unique
   description   String?
   pricePerNight Float
+  pricePerHour  Float    @default(0)
   maxGuests     Int
   bedCount      Int
   area          Float?
@@ -82,6 +83,8 @@ model Booking {
   actualCheckIn   DateTime?
   actualCheckOut  DateTime?
   status          String    @default("PENDING")
+  bookingType     String    @default("NIGHTLY")
+  hours           Float?
   numberOfGuests  Int       @default(1)
   depositAmount   Float     @default(0)
   note            String?

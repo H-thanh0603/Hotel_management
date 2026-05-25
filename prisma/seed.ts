@@ -59,19 +59,19 @@ async function main() {
   });
 
   const standard = await prisma.roomType.create({
-    data: { name: "Standard Room", description: "Phong tieu chuan", pricePerNight: 500000, maxGuests: 2, bedCount: 1, area: 25, amenities: JSON.stringify(["WiFi","TV","Dieu hoa","Tu lanh"]), status: "ACTIVE" },
+    data: { name: "Standard Room", description: "Phong tieu chuan", pricePerNight: 500000, pricePerHour: 100000, maxGuests: 2, bedCount: 1, area: 25, amenities: JSON.stringify(["WiFi","TV","Dieu hoa","Tu lanh"]), status: "ACTIVE" },
   });
   const superior = await prisma.roomType.create({
-    data: { name: "Superior Room", description: "Phong cao cap", pricePerNight: 800000, maxGuests: 2, bedCount: 1, area: 30, amenities: JSON.stringify(["WiFi","TV","Dieu hoa","Tu lanh","Bon tam","Ban cong"]), status: "ACTIVE" },
+    data: { name: "Superior Room", description: "Phong cao cap", pricePerNight: 800000, pricePerHour: 150000, maxGuests: 2, bedCount: 1, area: 30, amenities: JSON.stringify(["WiFi","TV","Dieu hoa","Tu lanh","Bon tam","Ban cong"]), status: "ACTIVE" },
   });
   const deluxe = await prisma.roomType.create({
-    data: { name: "Deluxe Room", description: "Phong sang trong", pricePerNight: 1200000, maxGuests: 3, bedCount: 2, area: 40, amenities: JSON.stringify(["WiFi","TV","Dieu hoa","Tu lanh","Bon tam","Minibar"]), status: "ACTIVE" },
+    data: { name: "Deluxe Room", description: "Phong sang trong", pricePerNight: 1200000, pricePerHour: 200000, maxGuests: 3, bedCount: 2, area: 40, amenities: JSON.stringify(["WiFi","TV","Dieu hoa","Tu lanh","Bon tam","Minibar"]), status: "ACTIVE" },
   });
   const family = await prisma.roomType.create({
-    data: { name: "Family Room", description: "Phong gia dinh", pricePerNight: 1500000, maxGuests: 5, bedCount: 3, area: 50, amenities: JSON.stringify(["WiFi","TV","Dieu hoa","Tu lanh","Bon tam","Bep nho"]), status: "ACTIVE" },
+    data: { name: "Family Room", description: "Phong gia dinh", pricePerNight: 1500000, pricePerHour: 250000, maxGuests: 5, bedCount: 3, area: 50, amenities: JSON.stringify(["WiFi","TV","Dieu hoa","Tu lanh","Bon tam","Bep nho"]), status: "ACTIVE" },
   });
   const suite = await prisma.roomType.create({
-    data: { name: "Suite Room", description: "Phong suite VIP", pricePerNight: 2500000, maxGuests: 4, bedCount: 2, area: 70, amenities: JSON.stringify(["WiFi","TV","Jacuzzi","Butler","Minibar"]), status: "ACTIVE" },
+    data: { name: "Suite Room", description: "Phong suite VIP", pricePerNight: 2500000, pricePerHour: 400000, maxGuests: 4, bedCount: 2, area: 70, amenities: JSON.stringify(["WiFi","TV","Jacuzzi","Butler","Minibar"]), status: "ACTIVE" },
   });
 
   const roomTypes = [standard, superior, deluxe, family, suite];

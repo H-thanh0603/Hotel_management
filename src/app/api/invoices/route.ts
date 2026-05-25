@@ -23,8 +23,13 @@ export async function POST(req: Request) {
   });
   if (!booking) return NextResponse.json({ error: "Booking not found" }, { status: 404 });
 
-  const nights = Math.ceil((new Date(booking.checkOutDate).getTime() - new Date(booking.checkInDate).getTime()) / (1000*60*60*24));
-  const roomAmount = nights * booking.roomType.pricePerNight;
+  let roomAmount = 0;
+  if (booking.bookingType === "HOURLY") {
+    roomAmount = (booking.hours || 0) * booking.roomType.pricePerHour;
+  } else {
+    const nights = Math.ceil((new Date(booking.checkOutDate).getTime() - new Date(booking.checkInDate).getTime()) / (1000*60*60*24));
+    roomAmount = nights * booking.roomType.pricePerNight;
+  }
   const serviceAmount = booking.bookingServices.reduce((sum, s) => sum + s.totalAmount, 0);
   const surcharge = body.surchargeAmount || 0;
   const discount = body.discountAmount || 0;
