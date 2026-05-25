@@ -7,7 +7,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { Plus, X, Check, LogIn, LogOut, Ban, BedDouble, History, CalendarCheck } from "lucide-react";
+import { Plus, X, Check, LogIn, LogOut, Ban, BedDouble, History, CalendarCheck, UserPlus } from "lucide-react";
+import WalkinBookingForm from "@/components/WalkinBookingForm";
 
 const statusConfig: Record<string, { label: string; variant: string }> = {
   PENDING: { label: "Chờ xác nhận", variant: "warning" },
@@ -28,6 +29,7 @@ export default function BookingsPage() {
   const [roomTypes, setRoomTypes] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [showWalkin, setShowWalkin] = useState(false);
   const [message, setMessage] = useState("");
   const [form, setForm] = useState({ customerId: "", roomTypeId: "", roomId: "", checkInDate: "", checkOutDate: "", numberOfGuests: 1, note: "" });
 
@@ -67,11 +69,16 @@ export default function BookingsPage() {
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? <><X className="w-4 h-4" /> Đóng</> : <><Plus className="w-4 h-4" /> {isStaff ? "Tạo booking" : "Đặt phòng mới"}</>}
         </Button>
+        {isStaff && <Button variant="success" onClick={() => { setShowWalkin(!showWalkin); setShowForm(false); }}>
+          {showWalkin ? <><X className="w-4 h-4" /> Đóng</> : <><UserPlus className="w-4 h-4" /> Khách đến trực tiếp</>}
+        </Button>}
       </div>
 
       {message && (
         <div className={`mb-4 px-4 py-3 rounded-lg text-sm ${message.includes("thành công") ? "bg-emerald-50 border border-emerald-200 text-emerald-700" : "bg-red-50 border border-red-200 text-red-700"}`}>{message}</div>
       )}
+
+      {showWalkin && isStaff && <WalkinBookingForm roomTypes={roomTypes} rooms={rooms} onClose={() => setShowWalkin(false)} onSuccess={load} />}
 
       {showForm && (
         <Card className="mb-6 border-blue-100 bg-blue-50/30"><CardContent className="p-5">
