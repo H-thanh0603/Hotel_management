@@ -108,6 +108,20 @@ async function main() {
     }
   }
 
+  const vouchers = [
+    { code: "SUMMER2026", description: "Ưu đãi nghỉ dưỡng hè 20%", discountType: "PERCENT", discountAmount: 20, minOrderAmount: 500000, maxUses: 500, validUntil: new Date("2026-12-31") },
+    { code: "VIP10", description: "Ưu đãi thành viên VIP 10%", discountType: "PERCENT", discountAmount: 10, minOrderAmount: 0, maxUses: 1000, validUntil: new Date("2026-12-31") },
+    { code: "WELCOME100K", description: "Voucher chào mừng 100,000đ", discountType: "FIXED", discountAmount: 100000, minOrderAmount: 300000, maxUses: 200, validUntil: new Date("2026-12-31") },
+  ];
+
+  for (const v of vouchers) {
+    await prisma.voucher.upsert({
+      where: { code: v.code },
+      update: v,
+      create: v,
+    });
+  }
+
   await prisma.customer.upsert({
     where: { email: "nguyenvana@gmail.com" },
     update: {},
@@ -138,7 +152,7 @@ async function main() {
     },
   });
 
-  console.log("Idempotent seed completed successfully!");
+  console.log("Idempotent seed with Vouchers completed successfully!");
 }
 
 main()

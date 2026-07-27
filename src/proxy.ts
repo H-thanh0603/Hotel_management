@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const PUBLIC_PATHS = [
   "/login",
@@ -20,6 +21,18 @@ const PUBLIC_API_PREFIXES = ["/api/auth", "/api/public"];
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // Rate-limiting check for API endpoints (120 requests per minute per IP)
+  if (pathname.startsWith("/api/")) {
+    const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "127.0.0.1";
+    const limitResult = checkRateLimit(ip, 120, 60000);
+    if (!limitResult.success) {
+      return NextResponse.json(
+        { error: "Thao tác quá nhanh. Vui lòng chờ 1 phút trước khi thử lại." },
+        { status: 429 }
+      );
+    }
+  }
 
   // Allow static assets and root public pages
   if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {

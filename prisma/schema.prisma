@@ -20,6 +20,9 @@ model User {
 
   bookingsCreated   Booking[]          @relation("CreatedBy")
   housekeepingTasks HousekeepingTask[] @relation("AssignedTo")
+
+  @@index([role])
+  @@index([status])
 }
 
 model Customer {
@@ -36,6 +39,8 @@ model Customer {
   updatedAt      DateTime  @updatedAt
 
   bookings Booking[]
+
+  @@index([phone])
 }
 
 model RoomType {
@@ -72,35 +77,40 @@ model Room {
   roomType          RoomType           @relation(fields: [roomTypeId], references: [id])
   bookings          Booking[]
   housekeepingTasks HousekeepingTask[]
+
+  @@index([status])
+  @@index([roomTypeId])
+  @@index([floor])
 }
 
 model Booking {
-  id                 String    @id @default(cuid())
-  bookingCode        String    @unique
-  customerId         String
-  roomId             String?
-  roomTypeId         String
-  checkInDate        DateTime
-  checkOutDate       DateTime
-  actualCheckIn      DateTime?
-  actualCheckOut     DateTime?
-  status             String    @default("PENDING")
-  bookingType        String    @default("NIGHTLY")
-  hours              Float?
-  numberOfGuests     Int       @default(1)
-  depositAmount      Int       @default(0)
+  id                  String    @id @default(cuid())
+  bookingCode         String    @unique
+  customerId          String
+  roomId              String?
+  roomTypeId          String
+  checkInDate         DateTime
+  checkOutDate        DateTime
+  actualCheckIn       DateTime?
+  actualCheckOut      DateTime?
+  status              String    @default("PENDING")
+  bookingType         String    @default("NIGHTLY")
+  hours               Float?
+  numberOfGuests      Int       @default(1)
+  depositAmount       Int       @default(0)
   nightlyRateSnapshot Int?
-  discountAmount     Int       @default(0)
-  taxAmount          Int       @default(0)
-  totalAmount        Int       @default(0)
-  specialRequests    String?
-  cancellationReason String?
-  cancelledAt        DateTime?
-  cancelledByUserId  String?
-  note               String?
-  createdById        String?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  voucherCode         String?
+  discountAmount      Int       @default(0)
+  taxAmount           Int       @default(0)
+  totalAmount         Int       @default(0)
+  specialRequests     String?
+  cancellationReason  String?
+  cancelledAt         DateTime?
+  cancelledByUserId   String?
+  note                String?
+  createdById         String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   customer        Customer         @relation(fields: [customerId], references: [id])
   room            Room?            @relation(fields: [roomId], references: [id])
@@ -108,6 +118,11 @@ model Booking {
   createdBy       User?            @relation("CreatedBy", fields: [createdById], references: [id])
   bookingServices BookingService[]
   invoices        Invoice[]
+
+  @@index([checkInDate, checkOutDate])
+  @@index([status])
+  @@index([customerId])
+  @@index([roomTypeId])
 }
 
 model Service {
@@ -121,6 +136,8 @@ model Service {
   updatedAt   DateTime @updatedAt
 
   bookingServices BookingService[]
+
+  @@index([status])
 }
 
 model BookingService {
@@ -134,6 +151,8 @@ model BookingService {
 
   booking Booking @relation(fields: [bookingId], references: [id])
   service Service @relation(fields: [serviceId], references: [id])
+
+  @@index([bookingId])
 }
 
 model Invoice {
@@ -153,6 +172,9 @@ model Invoice {
 
   booking  Booking   @relation(fields: [bookingId], references: [id])
   payments Payment[]
+
+  @@index([paymentStatus])
+  @@index([bookingId])
 }
 
 model Payment {
@@ -164,6 +186,8 @@ model Payment {
   note      String?
 
   invoice Invoice @relation(fields: [invoiceId], references: [id])
+
+  @@index([invoiceId])
 }
 
 model HousekeepingTask {
@@ -177,6 +201,8 @@ model HousekeepingTask {
 
   room       Room  @relation(fields: [roomId], references: [id])
   assignedTo User? @relation("AssignedTo", fields: [assignedToId], references: [id])
+
+  @@index([status])
 }
 
 model PricingConfig {
@@ -200,4 +226,27 @@ model AuditLog {
   detail    String?
   ip        String?
   createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+}
+
+model Voucher {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  description    String?
+  discountType   String    @default("PERCENT")
+  discountAmount Int
+  minOrderAmount Int       @default(0)
+  maxDiscount    Int?
+  maxUses        Int       @default(100)
+  usedCount      Int       @default(0)
+  validFrom      DateTime  @default(now())
+  validUntil     DateTime
+  status         String    @default("ACTIVE")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([code])
+  @@index([status])
 }

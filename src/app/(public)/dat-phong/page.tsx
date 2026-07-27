@@ -4,7 +4,8 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Calendar, CheckCircle2, ArrowRight, ArrowLeft } from "lucide-react";
+import { Calendar, CheckCircle2, ArrowRight, ArrowLeft, Ticket, QrCode } from "lucide-react";
+import { generateVietQRUrl } from "@/lib/vietqr";
 
 function BookingFlowContent() {
   const searchParams = useSearchParams();
@@ -26,6 +27,12 @@ function BookingFlowContent() {
   const [selectedRoomType, setSelectedRoomType] = useState<any>(null);
   const [availableRoomTypes, setAvailableRoomTypes] = useState<any[]>([]);
   const [loadingAvailability, setLoadingAvailability] = useState(false);
+
+  // Voucher state
+  const [voucherCodeInput, setVoucherCodeInput] = useState("");
+  const [appliedVoucher, setAppliedVoucher] = useState<any>(null);
+  const [voucherError, setVoucherError] = useState("");
+  const [verifyingVoucher, setVerifyingVoucher] = useState(false);
 
   // Guest details
   const [guestName, setGuestName] = useState("");
@@ -87,7 +94,29 @@ function BookingFlowContent() {
   const nights = calculateNights();
   const roomPricePerNight = selectedRoomType?.pricePerNight || 0;
   const roomSubtotal = roomPricePerNight * nights;
-  const totalAmount = roomSubtotal;
+  const discountAmount = appliedVoucher?.calculatedDiscount || 0;
+  const totalAmount = Math.max(0, roomSubtotal - discountAmount);
+
+  const handleApplyVoucher = async () => {
+    if (!voucherCodeInput.trim()) return;
+    setVerifyingVoucher(true);
+    setVoucherError("");
+    try {
+      const res = await fetch("/api/vouchers/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: voucherCodeInput.trim(), totalAmount: roomSubtotal }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Mã voucher không hợp lệ");
+      setAppliedVoucher(data.voucher);
+    } catch (e: any) {
+      setVoucherError(e.message);
+      setAppliedVoucher(null);
+    } finally {
+      setVerifyingVoucher(false);
+    }
+  };
 
   const handleNextStep1 = (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,6 +154,7 @@ function BookingFlowContent() {
           checkInDate,
           checkOutDate,
           numberOfGuests,
+          voucherCode: appliedVoucher?.code || null,
           note: `Khách hàng: ${guestName} | SĐT: ${guestPhone} | Ghi chú: ${note}`.trim(),
         }),
       });
@@ -157,7 +187,7 @@ function BookingFlowContent() {
                 step === s.num
                   ? "bg-blue-600 text-white ring-4 ring-blue-500/20"
                   : step > s.num
-                  ? "bg-emerald-50 text-white"
+                  ? "bg-emerald-500 text-white"
                   : "bg-slate-800 text-slate-500"
               }`}
             >
@@ -372,6 +402,41 @@ function BookingFlowContent() {
                   <span className="text-slate-400">Người đặt:</span>
                   <span className="text-slate-200">{guestName} ({guestEmail})</span>
                 </div>
+                <div className="flex justify-between items-center text-sm border-b border-slate-800 pb-2">
+                  <span className="text-slate-400">Tạm tính:</span>
+                  <span className="text-slate-200">{roomSubtotal.toLocaleString("vi-VN")}đ</span>
+                </div>
+
+                {/* Voucher Input */}
+                <div className="py-2 space-y-2">
+                  <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                    <Ticket className="w-4 h-4 text-blue-400" /> Mã giảm giá (Voucher)
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Nhập mã (VD: SUMMER2026, VIP10)"
+                      value={voucherCodeInput}
+                      onChange={(e) => setVoucherCodeInput(e.target.value.toUpperCase())}
+                      className="bg-slate-900 border-slate-700 text-white uppercase font-mono"
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleApplyVoucher}
+                      disabled={verifyingVoucher}
+                      className="bg-slate-700 hover:bg-slate-600 text-white shrink-0"
+                    >
+                      Áp dụng
+                    </Button>
+                  </div>
+                  {voucherError && <p className="text-xs text-red-400">{voucherError}</p>}
+                  {appliedVoucher && (
+                    <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center justify-between">
+                      <span>Mã <strong>{appliedVoucher.code}</strong> được áp dụng</span>
+                      <span>Giảm -{appliedVoucher.calculatedDiscount.toLocaleString("vi-VN")}đ</span>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex justify-between items-center text-base pt-2">
                   <span className="font-bold text-white">Tổng tiền thanh toán:</span>
                   <span className="text-2xl font-black text-blue-400">{totalAmount.toLocaleString("vi-VN")}đ</span>
@@ -403,7 +468,7 @@ function BookingFlowContent() {
         </Card>
       )}
 
-      {/* STEP 5: Success Result */}
+      {/* STEP 5: Success Result & VietQR Payment */}
       {step === 5 && bookingResult && (
         <Card className="bg-slate-800/80 border-slate-700/80 shadow-2xl text-center p-8 space-y-6">
           <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-500/30">
@@ -414,14 +479,36 @@ function BookingFlowContent() {
             <p className="text-sm text-slate-400 mt-1">Cảm ơn bạn đã lựa chọn nghỉ dưỡng tại HotelFlow</p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-700 max-w-md mx-auto space-y-2 text-left text-sm">
-            <div className="flex justify-between">
-              <span className="text-slate-400">Mã booking:</span>
-              <span className="font-mono font-bold text-blue-400">{bookingResult.bookingCode}</span>
+          <div className="grid md:grid-cols-2 gap-6 items-center max-w-2xl mx-auto text-left">
+            <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-700 space-y-2 text-sm h-full flex flex-col justify-center">
+              <div className="flex justify-between border-b border-slate-800 pb-2">
+                <span className="text-slate-400">Mã booking:</span>
+                <span className="font-mono font-bold text-blue-400">{bookingResult.bookingCode}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-800 pb-2">
+                <span className="text-slate-400">Trạng thái:</span>
+                <span className="text-emerald-400 font-semibold">{bookingResult.status}</span>
+              </div>
+              <div className="flex justify-between pt-1">
+                <span className="text-slate-400">Tổng thanh toán:</span>
+                <span className="font-bold text-white text-base">{totalAmount.toLocaleString("vi-VN")}đ</span>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Trạng thái:</span>
-              <span className="text-emerald-400 font-semibold">{bookingResult.status}</span>
+
+            {/* VietQR Display */}
+            <div className="p-4 rounded-xl bg-slate-950 border border-blue-500/30 text-center space-y-3">
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
+                <QrCode className="w-4 h-4" /> Thanh Toán VietQR Tự Động
+              </div>
+              <p className="text-[11px] text-slate-400">Quét mã bằng app Ngân hàng / MoMo để cọc phòng</p>
+              <div className="bg-white p-2 rounded-xl inline-block shadow-lg">
+                <img
+                  src={generateVietQRUrl(totalAmount, `COC ${bookingResult.bookingCode}`)}
+                  alt="VietQR Payment"
+                  className="w-44 h-44 object-contain"
+                />
+              </div>
+              <p className="text-[10px] text-slate-400 font-mono">Chủ TK: HOTELFLOW LUXURY SYSTEM</p>
             </div>
           </div>
 

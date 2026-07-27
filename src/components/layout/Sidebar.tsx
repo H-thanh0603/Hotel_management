@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard, BedDouble, Tag, CalendarCheck, Users,
-  ConciergeBell, Receipt, Sparkles, UserCog, LogOut, Hotel, Settings, ShieldAlert
+  ConciergeBell, Receipt, Sparkles, UserCog, LogOut, Hotel, Settings, ShieldAlert, Ticket
 } from "lucide-react";
 
 const adminLinks = [
@@ -15,6 +15,7 @@ const adminLinks = [
   { href: "/customers", label: "Khách hàng", icon: Users },
   { href: "/services", label: "Dịch vụ", icon: ConciergeBell },
   { href: "/invoices", label: "Hoá đơn", icon: Receipt },
+  { href: "/vouchers", label: "Mã giảm giá", icon: Ticket },
   { href: "/housekeeping", label: "Dọn phòng", icon: Sparkles },
   { href: "/users", label: "Nhân viên", icon: UserCog },
   { href: "/audit-logs", label: "Nhật ký hệ thống", icon: ShieldAlert },
@@ -23,7 +24,7 @@ const adminLinks = [
 
 const roleLinks: Record<string, typeof adminLinks> = {
   ADMIN: adminLinks,
-  RECEPTIONIST: adminLinks.filter(l => ["/dashboard", "/rooms", "/bookings", "/customers", "/services", "/invoices"].includes(l.href)),
+  RECEPTIONIST: adminLinks.filter(l => ["/dashboard", "/rooms", "/bookings", "/customers", "/services", "/invoices", "/vouchers"].includes(l.href)),
   HOUSEKEEPING: adminLinks.filter(l => ["/dashboard", "/housekeeping", "/rooms"].includes(l.href)),
 };
 
