@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard, BedDouble, Tag, CalendarCheck, Users,
-  ConciergeBell, Receipt, Sparkles, UserCog, LogOut, Hotel, Settings
+  ConciergeBell, Receipt, Sparkles, UserCog, LogOut, Hotel, Settings, ShieldAlert
 } from "lucide-react";
 
 const adminLinks = [
@@ -17,14 +17,14 @@ const adminLinks = [
   { href: "/invoices", label: "Hoá đơn", icon: Receipt },
   { href: "/housekeeping", label: "Dọn phòng", icon: Sparkles },
   { href: "/users", label: "Nhân viên", icon: UserCog },
+  { href: "/audit-logs", label: "Nhật ký hệ thống", icon: ShieldAlert },
   { href: "/settings", label: "Cài đặt giá", icon: Settings },
 ];
 
 const roleLinks: Record<string, typeof adminLinks> = {
   ADMIN: adminLinks,
-  RECEPTIONIST: adminLinks.filter(l => ["/dashboard","/rooms","/bookings","/customers","/services","/invoices"].includes(l.href)),
-  HOUSEKEEPING: adminLinks.filter(l => ["/dashboard","/housekeeping","/rooms"].includes(l.href)),
-  CUSTOMER: adminLinks.filter(l => ["/dashboard","/bookings"].includes(l.href)),
+  RECEPTIONIST: adminLinks.filter(l => ["/dashboard", "/rooms", "/bookings", "/customers", "/services", "/invoices"].includes(l.href)),
+  HOUSEKEEPING: adminLinks.filter(l => ["/dashboard", "/housekeeping", "/rooms"].includes(l.href)),
 };
 
 const roleLabels: Record<string, string> = {
@@ -37,8 +37,8 @@ const roleLabels: Record<string, string> = {
 export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const role = session?.user?.role || "CUSTOMER";
-  const links = roleLinks[role] || roleLinks.CUSTOMER;
+  const role = session?.user?.role || "ADMIN";
+  const links = roleLinks[role] || roleLinks.ADMIN;
 
   return (
     <aside className="w-[260px] bg-[#0f172a] text-white min-h-screen flex flex-col shadow-xl">

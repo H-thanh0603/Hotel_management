@@ -4,20 +4,20 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, BedDouble, Users, Maximize, X } from "lucide-react";
+import { Plus, BedDouble, Users, X } from "lucide-react";
 
 export default function RoomTypesPage() {
   const [types, setTypes] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", description: "", pricePerNight: 0, pricePerHour: 0, overnightPrice: 0, maxGuests: 2, bedCount: 1, area: 0 });
 
-  useEffect(() => { fetch("/api/room-types").then(r => r.json()).then(setTypes); }, []);
+  useEffect(() => { fetch("/api/room-types").then(r => r.json()).then(d => setTypes(Array.isArray(d) ? d : [])); }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await fetch("/api/room-types", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
     const data = await fetch("/api/room-types").then(r => r.json());
-    setTypes(data);
+    setTypes(Array.isArray(data) ? data : []);
     setShowForm(false);
     setForm({ name: "", description: "", pricePerNight: 0, pricePerHour: 0, overnightPrice: 0, maxGuests: 2, bedCount: 1, area: 0 });
   };

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BedDouble, Layers } from "lucide-react";
+import { Layers } from "lucide-react";
 
 const statusConfig: Record<string, { label: string; variant: string; dot: string }> = {
   AVAILABLE: { label: "Trống", variant: "success", dot: "bg-emerald-500" },
@@ -18,7 +18,7 @@ export default function RoomsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/rooms").then(r => r.json()).then(data => { setRooms(data); setLoading(false); });
+    fetch("/api/rooms").then(r => r.json()).then(data => { setRooms(Array.isArray(data) ? data : []); setLoading(false); });
   }, []);
 
   const floors = [...new Set(rooms.map(r => r.floor))].sort();

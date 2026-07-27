@@ -18,41 +18,42 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  bookingsCreated    Booking[]          @relation("CreatedBy")
-  housekeepingTasks  HousekeepingTask[] @relation("AssignedTo")
+  bookingsCreated   Booking[]          @relation("CreatedBy")
+  housekeepingTasks HousekeepingTask[] @relation("AssignedTo")
 }
 
 model Customer {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   fullName       String
   phone          String?
-  email          String?  @unique
+  email          String?   @unique
   identityNumber String?
   nationality    String?
   address        String?
   dateOfBirth    DateTime?
   note           String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   bookings Booking[]
 }
 
 model RoomType {
-  id            String   @id @default(cuid())
-  name          String   @unique
-  description   String?
-  pricePerNight Float
-  pricePerHour  Float    @default(0)
-  overnightPrice Float   @default(0)
-  maxGuests     Int
-  bedCount      Int
-  area          Float?
-  amenities     String?
-  imageUrl      String?
-  status        String   @default("ACTIVE")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id             String   @id @default(cuid())
+  name           String   @unique
+  slug           String?  @unique
+  description    String?
+  pricePerNight  Int
+  pricePerHour   Int      @default(0)
+  overnightPrice Int      @default(0)
+  maxGuests      Int
+  bedCount       Int
+  area           Float?
+  amenities      String?
+  imageUrl       String?
+  status         String   @default("ACTIVE")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   rooms    Room[]
   bookings Booking[]
@@ -74,24 +75,32 @@ model Room {
 }
 
 model Booking {
-  id              String    @id @default(cuid())
-  bookingCode     String    @unique
-  customerId      String
-  roomId          String?
-  roomTypeId      String
-  checkInDate     DateTime
-  checkOutDate    DateTime
-  actualCheckIn   DateTime?
-  actualCheckOut  DateTime?
-  status          String    @default("PENDING")
-  bookingType     String    @default("NIGHTLY")
-  hours           Float?
-  numberOfGuests  Int       @default(1)
-  depositAmount   Float     @default(0)
-  note            String?
-  createdById     String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  bookingCode        String    @unique
+  customerId         String
+  roomId             String?
+  roomTypeId         String
+  checkInDate        DateTime
+  checkOutDate       DateTime
+  actualCheckIn      DateTime?
+  actualCheckOut     DateTime?
+  status             String    @default("PENDING")
+  bookingType        String    @default("NIGHTLY")
+  hours              Float?
+  numberOfGuests     Int       @default(1)
+  depositAmount      Int       @default(0)
+  nightlyRateSnapshot Int?
+  discountAmount     Int       @default(0)
+  taxAmount          Int       @default(0)
+  totalAmount        Int       @default(0)
+  specialRequests    String?
+  cancellationReason String?
+  cancelledAt        DateTime?
+  cancelledByUserId  String?
+  note               String?
+  createdById        String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   customer        Customer         @relation(fields: [customerId], references: [id])
   room            Room?            @relation(fields: [roomId], references: [id])
@@ -104,7 +113,7 @@ model Booking {
 model Service {
   id          String   @id @default(cuid())
   name        String
-  price       Float
+  price       Int
   unit        String
   description String?
   status      String   @default("ACTIVE")
@@ -119,8 +128,8 @@ model BookingService {
   bookingId   String
   serviceId   String
   quantity    Int      @default(1)
-  priceAtTime Float
-  totalAmount Float
+  priceAtTime Int
+  totalAmount Int
   createdAt   DateTime @default(now())
 
   booking Booking @relation(fields: [bookingId], references: [id])
@@ -130,14 +139,14 @@ model BookingService {
 model Invoice {
   id              String   @id @default(cuid())
   invoiceCode     String   @unique
-  bookingId       String
-  roomAmount      Float    @default(0)
-  serviceAmount   Float    @default(0)
-  surchargeAmount Float    @default(0)
-  discountAmount  Float    @default(0)
-  taxAmount       Float    @default(0)
-  totalAmount     Float    @default(0)
-  paidAmount      Float    @default(0)
+  bookingId       String   @unique
+  roomAmount      Int      @default(0)
+  serviceAmount   Int      @default(0)
+  surchargeAmount Int      @default(0)
+  discountAmount  Int      @default(0)
+  taxAmount       Int      @default(0)
+  totalAmount     Int      @default(0)
+  paidAmount      Int      @default(0)
   paymentStatus   String   @default("UNPAID")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -149,7 +158,7 @@ model Invoice {
 model Payment {
   id        String   @id @default(cuid())
   invoiceId String
-  amount    Float
+  amount    Int
   method    String   @default("CASH")
   paidAt    DateTime @default(now())
   note      String?
@@ -171,12 +180,24 @@ model HousekeepingTask {
 }
 
 model PricingConfig {
-  id              String   @id @default(cuid())
-  name            String   @unique
-  overnightStart  String   @default("23:00")
-  overnightEnd    String   @default("11:00")
-  gracePeriod     Int      @default(15)
-  overtimeCharge  Int      @default(30)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  name           String   @unique
+  overnightStart String   @default("23:00")
+  overnightEnd   String   @default("11:00")
+  gracePeriod    Int      @default(15)
+  overtimeCharge Int      @default(30)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  userRole  String?
+  action    String
+  entity    String
+  entityId  String?
+  detail    String?
+  ip        String?
+  createdAt DateTime @default(now())
 }

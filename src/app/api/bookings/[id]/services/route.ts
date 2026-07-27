@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireRole } from "@/lib/auth-helpers";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const guard = await requireRole(["ADMIN", "RECEPTIONIST"]);
+  if (guard instanceof NextResponse) return guard;
+
   const { id } = await params;
   const body = await req.json();
   const service = await prisma.service.findUnique({ where: { id: body.serviceId } });
@@ -15,6 +19,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 }
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const guard = await requireRole(["ADMIN", "RECEPTIONIST"]);
+  if (guard instanceof NextResponse) return guard;
+
   const { id } = await params;
   const services = await prisma.bookingService.findMany({ where: { bookingId: id }, include: { service: true } });
   return NextResponse.json(services);

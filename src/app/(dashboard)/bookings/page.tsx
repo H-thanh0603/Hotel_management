@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
@@ -40,8 +40,8 @@ export default function BookingsPage() {
     } else {
       fetch("/api/bookings/my").then(r => r.json()).then(setBookings);
     }
-    fetch("/api/room-types").then(r => r.json()).then(setRoomTypes);
-    fetch("/api/rooms").then(r => r.json()).then(setRooms);
+    fetch("/api/room-types").then(r => r.json()).then(d => setRoomTypes(Array.isArray(d) ? d : []));
+    fetch("/api/rooms").then(r => r.json()).then(d => setRooms(Array.isArray(d) ? d : []));
   };
   useEffect(load, [isStaff]);
 

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireRole } from "@/lib/auth-helpers";
 
 export async function GET() {
+  const guard = await requireRole(["ADMIN", "RECEPTIONIST", "HOUSEKEEPING"]);
+  if (guard instanceof NextResponse) return guard;
+
   const tasks = await prisma.housekeepingTask.findMany({
     include: { room: { include: { roomType: true } }, assignedTo: true },
     orderBy: { createdAt: "desc" },
@@ -10,7 +14,13 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
+  const guard = await requireRole(["ADMIN", "RECEPTIONIST", "HOUSEKEEPING"]);
+  if (guard instanceof NextResponse) return guard;
+
   const body = await req.json();
+  if (!body.id) {
+    return NextResponse.json({ error: "Thiếu id task" }, { status: 400 });
+  }
   const task = await prisma.housekeepingTask.update({
     where: { id: body.id },
     data: {

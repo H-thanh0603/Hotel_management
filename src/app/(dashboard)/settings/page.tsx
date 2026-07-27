@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Settings, Clock, Moon, AlertTriangle } from "lucide-react";
+import { Settings, Moon, AlertTriangle } from "lucide-react";
 
 export default function PricingSettingsPage() {
   const [config, setConfig] = useState({ overnightStart: "23:00", overnightEnd: "11:00", gracePeriod: 15, overtimeCharge: 30 });

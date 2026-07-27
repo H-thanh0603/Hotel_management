@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireRole } from "@/lib/auth-helpers";
 
 export async function GET() {
+  const guard = await requireRole(["ADMIN", "RECEPTIONIST", "HOUSEKEEPING"]);
+  if (guard instanceof NextResponse) return guard;
+
   let config = await prisma.pricingConfig.findUnique({ where: { name: "default" } });
   if (!config) {
     config = await prisma.pricingConfig.create({
@@ -12,6 +16,9 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
+  const guard = await requireRole(["ADMIN"]);
+  if (guard instanceof NextResponse) return guard;
+
   const body = await req.json();
   const config = await prisma.pricingConfig.upsert({
     where: { name: "default" },

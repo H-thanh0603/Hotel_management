@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { requireRole } from "@/lib/auth-helpers";
+import { walkinSchema, parseBody } from "@/lib/validators";
 
 function generateBookingCode() {
   const prefix = "BK";
@@ -11,10 +11,12 @@ function generateBookingCode() {
 }
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 });
+  const guard = await requireRole(["ADMIN", "RECEPTIONIST"]);
+  if (guard instanceof NextResponse) return guard;
 
-  const body = await req.json();
+  const parsed = parseBody(walkinSchema, await req.json());
+  if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
+  const body = parsed.data;
   const { roomId, bookingType, hours, note } = body;
 
   if (!roomId) return NextResponse.json({ error: "Vui lòng chọn phòng" }, { status: 400 });
@@ -56,7 +58,7 @@ export async function POST(req: Request) {
       hours: bookingType === "HOURLY" ? (hours || 2) : null,
       numberOfGuests: 1,
       note,
-      createdById: (session.user as any).id,
+      createdById: (guard.user as any).id,
     },
     include: { customer: true, room: true, roomType: true },
   });

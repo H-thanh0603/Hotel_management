@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireRole } from "@/lib/auth-helpers";
+import { invoiceCreateSchema, parseBody } from "@/lib/validators";
 
 function generateInvoiceCode() {
   const prefix = "INV";
@@ -8,6 +10,9 @@ function generateInvoiceCode() {
 }
 
 export async function GET() {
+  const guard = await requireRole(["ADMIN", "RECEPTIONIST"]);
+  if (guard instanceof NextResponse) return guard;
+
   const invoices = await prisma.invoice.findMany({
     include: { booking: { include: { customer: true, room: true } } },
     orderBy: { createdAt: "desc" },
@@ -16,7 +21,15 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const body = await req.json();
+  const guard = await requireRole(["ADMIN", "RECEPTIONIST"]);
+  if (guard instanceof NextResponse) return guard;
+
+  const parsed = parseBody(invoiceCreateSchema, await req.json());
+  if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
+  const body = parsed.data;
+  if (!body.bookingId) {
+    return NextResponse.json({ error: "Thiếu bookingId" }, { status: 400 });
+  }
   const booking = await prisma.booking.findUnique({
     where: { id: body.bookingId },
     include: { roomType: true, bookingServices: true },
@@ -27,7 +40,10 @@ export async function POST(req: Request) {
   if (booking.bookingType === "HOURLY") {
     roomAmount = (booking.hours || 0) * booking.roomType.pricePerHour;
   } else {
-    const nights = Math.ceil((new Date(booking.checkOutDate).getTime() - new Date(booking.checkInDate).getTime()) / (1000*60*60*24));
+    const nights = Math.ceil(
+      (new Date(booking.checkOutDate).getTime() - new Date(booking.checkInDate).getTime()) /
+        (1000 * 60 * 60 * 24)
+    );
     roomAmount = nights * booking.roomType.pricePerNight;
   }
   const serviceAmount = booking.bookingServices.reduce((sum, s) => sum + s.totalAmount, 0);
@@ -40,9 +56,14 @@ export async function POST(req: Request) {
     data: {
       invoiceCode: generateInvoiceCode(),
       bookingId: booking.id,
-      roomAmount, serviceAmount, surchargeAmount: surcharge,
-      discountAmount: discount, taxAmount: tax,
-      totalAmount: total, paidAmount: 0, paymentStatus: "UNPAID",
+      roomAmount,
+      serviceAmount,
+      surchargeAmount: surcharge,
+      discountAmount: discount,
+      taxAmount: tax,
+      totalAmount: total,
+      paidAmount: 0,
+      paymentStatus: "UNPAID",
     },
   });
   return NextResponse.json(invoice, { status: 201 });
