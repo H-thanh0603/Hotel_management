@@ -1,11 +1,13 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+  schemas   = ["public"]
 }
 
 model User {
@@ -24,6 +26,7 @@ model User {
 
   @@index([role])
   @@index([status])
+  @@schema("public")
 }
 
 model Customer {
@@ -42,6 +45,7 @@ model Customer {
   bookings Booking[]
 
   @@index([phone])
+  @@schema("public")
 }
 
 model RoomType {
@@ -63,6 +67,8 @@ model RoomType {
 
   rooms    Room[]
   bookings Booking[]
+
+  @@schema("public")
 }
 
 model Room {
@@ -82,6 +88,7 @@ model Room {
   @@index([status])
   @@index([roomTypeId])
   @@index([floor])
+  @@schema("public")
 }
 
 model Booking {
@@ -124,6 +131,7 @@ model Booking {
   @@index([status])
   @@index([customerId])
   @@index([roomTypeId])
+  @@schema("public")
 }
 
 model Service {
@@ -139,6 +147,7 @@ model Service {
   bookingServices BookingService[]
 
   @@index([status])
+  @@schema("public")
 }
 
 model BookingService {
@@ -154,6 +163,7 @@ model BookingService {
   service Service @relation(fields: [serviceId], references: [id])
 
   @@index([bookingId])
+  @@schema("public")
 }
 
 model Invoice {
@@ -176,6 +186,7 @@ model Invoice {
 
   @@index([paymentStatus])
   @@index([bookingId])
+  @@schema("public")
 }
 
 model Payment {
@@ -189,6 +200,7 @@ model Payment {
   invoice Invoice @relation(fields: [invoiceId], references: [id])
 
   @@index([invoiceId])
+  @@schema("public")
 }
 
 model HousekeepingTask {
@@ -204,6 +216,7 @@ model HousekeepingTask {
   assignedTo User? @relation("AssignedTo", fields: [assignedToId], references: [id])
 
   @@index([status])
+  @@schema("public")
 }
 
 model PricingConfig {
@@ -215,6 +228,8 @@ model PricingConfig {
   overtimeCharge Int      @default(30)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@schema("public")
 }
 
 model AuditLog {
@@ -230,6 +245,7 @@ model AuditLog {
 
   @@index([createdAt])
   @@index([action])
+  @@schema("public")
 }
 
 model Voucher {
@@ -250,4 +266,5 @@ model Voucher {
 
   @@index([code])
   @@index([status])
+  @@schema("public")
 }
